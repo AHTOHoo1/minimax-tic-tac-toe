@@ -1,6 +1,9 @@
 
+import tkinter as tk
+from tkinter import messagebox
+
 # ============================================================
-# AI Laboratory Work 2
+# AI LABORATORY WORK 2
 # Tic-Tac-Toe: Human vs AI
 # Algorithm: Minimax
 # ============================================================
@@ -9,38 +12,37 @@ BOARD_SIZE = 3
 
 HUMAN = "X"
 AI = "O"
-EMPTY = " "
+EMPTY = ""
 
 AI_WIN_SCORE = 10
 HUMAN_WIN_SCORE = -10
 DRAW_SCORE = 0
 
+# Interface colors
+BG_COLOR = "#10141F"
+PANEL_COLOR = "#191F2E"
+CELL_COLOR = "#222A3B"
+CELL_HOVER = "#303B52"
+TEXT_COLOR = "#F3F4F6"
+MUTED_COLOR = "#9CA3AF"
+X_COLOR = "#38BDF8"
+O_COLOR = "#FBBF24"
+ACCENT_COLOR = "#6366F1"
+WIN_COLOR = "#34D399"
+
+
+# ============================================================
+# GAME LOGIC
+# ============================================================
 
 def create_board():
-    """Create an empty 3x3 game board."""
+    """Create an empty 3x3 board."""
     return [[EMPTY for _ in range(BOARD_SIZE)]
             for _ in range(BOARD_SIZE)]
 
 
-def print_board(board):
-    """Display the game board in the console."""
-    print("\n")
-    print("       1   2   3")
-    print("     +---+---+---+")
-
-    for row in range(BOARD_SIZE):
-        print(
-            f"  {row + 1}  | "
-            + " | ".join(board[row])
-            + " |"
-        )
-        print("     +---+---+---+")
-
-    print()
-
-
 def get_available_moves(board):
-    """Return all empty cells as (row, column) pairs."""
+    """Return all empty cells as (row, col)."""
     moves = []
 
     for row in range(BOARD_SIZE):
@@ -52,47 +54,48 @@ def get_available_moves(board):
 
 
 def apply_move(board, move, player):
-    """Place a player's symbol on the board."""
+    """Place a symbol on the board."""
     row, col = move
     board[row][col] = player
 
 
 def undo_move(board, move):
-    """Undo a simulated move during Minimax search."""
+    """Undo a simulated move during Minimax."""
     row, col = move
     board[row][col] = EMPTY
 
 
 def check_winner(board):
-    """
-    Return the winning symbol if a player has won.
-    Return None if there is no winner.
-    """
+    """Return the winning symbol or None."""
 
     # Check rows
     for row in range(BOARD_SIZE):
-        if (board[row][0] != EMPTY
-                and board[row][0] == board[row][1]
-                == board[row][2]):
+        if (
+            board[row][0] != EMPTY
+            and board[row][0] == board[row][1] == board[row][2]
+        ):
             return board[row][0]
 
     # Check columns
     for col in range(BOARD_SIZE):
-        if (board[0][col] != EMPTY
-                and board[0][col] == board[1][col]
-                == board[2][col]):
+        if (
+            board[0][col] != EMPTY
+            and board[0][col] == board[1][col] == board[2][col]
+        ):
             return board[0][col]
 
-    # Check the main diagonal
-    if (board[0][0] != EMPTY
-            and board[0][0] == board[1][1]
-            == board[2][2]):
+    # Main diagonal
+    if (
+        board[0][0] != EMPTY
+        and board[0][0] == board[1][1] == board[2][2]
+    ):
         return board[0][0]
 
-    # Check the opposite diagonal
-    if (board[0][2] != EMPTY
-            and board[0][2] == board[1][1]
-            == board[2][0]):
+    # Opposite diagonal
+    if (
+        board[0][2] != EMPTY
+        and board[0][2] == board[1][1] == board[2][0]
+    ):
         return board[0][2]
 
     return None
@@ -100,15 +103,15 @@ def check_winner(board):
 
 def is_terminal(board):
     """Check whether the game has ended."""
-    if check_winner(board) is not None:
-        return True
-
-    return len(get_available_moves(board)) == 0
+    return (
+        check_winner(board) is not None
+        or len(get_available_moves(board)) == 0
+    )
 
 
 def evaluate(board):
     """
-    Evaluate a terminal game state:
+    Evaluate terminal states:
     AI win    = +10
     Human win = -10
     Draw      = 0
@@ -121,27 +124,26 @@ def evaluate(board):
     if winner == HUMAN:
         return HUMAN_WIN_SCORE
 
-    if is_terminal(board):
+    if len(get_available_moves(board)) == 0:
         return DRAW_SCORE
 
-    # Non-terminal positions are not evaluated here.
     return None
 
 
 def minimax(board, depth, is_maximizing):
     """
-    Recursively search the game tree.
+    Minimax recursively explores all possible moves.
 
-    AI (maximizing player) chooses the maximum score.
-    Human (minimizing player) chooses the minimum score.
-    The entire game tree is searched until a terminal state.
+    AI tries to maximize the score.
+    Human is assumed to minimize the AI's score.
+
+    No depth limit is used because Tic-Tac-Toe is small.
     """
 
-    # Base case: the game has ended
     if is_terminal(board):
         score = evaluate(board)
 
-        # Prefer faster AI wins and slower AI losses
+        # Prefer quicker wins and delay unavoidable losses.
         if score == AI_WIN_SCORE:
             return score - depth
 
@@ -151,7 +153,6 @@ def minimax(board, depth, is_maximizing):
         return DRAW_SCORE
 
     if is_maximizing:
-        # AI tries to maximize the score
         best_score = float("-inf")
 
         for move in get_available_moves(board):
@@ -166,8 +167,6 @@ def minimax(board, depth, is_maximizing):
         return best_score
 
     else:
-        # Human is assumed to choose the best response,
-        # minimizing the AI's score.
         best_score = float("inf")
 
         for move in get_available_moves(board):
@@ -183,7 +182,7 @@ def minimax(board, depth, is_maximizing):
 
 
 def find_best_move(board):
-    """Find the optimal move for the AI."""
+    """Return the optimal move and its Minimax score."""
     best_score = float("-inf")
     best_move = None
 
@@ -201,88 +200,309 @@ def find_best_move(board):
     return best_move, best_score
 
 
-def human_move(board):
-    """Ask the human player to enter a move."""
-    while True:
-        try:
-            choice = input(
-                "Your move (row and column, e.g. 2 3): "
-            ).strip()
+# ============================================================
+# GRAPHICAL INTERFACE
+# ============================================================
 
-            parts = choice.split()
+class TicTacToeApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Tic-Tac-Toe | Minimax AI")
+        self.root.configure(bg=BG_COLOR)
+        self.root.resizable(False, False)
 
-            if len(parts) != 2:
-                print("Enter two numbers: row and column.")
-                continue
+        self.board = create_board()
+        self.game_over = False
 
-            row = int(parts[0]) - 1
-            col = int(parts[1]) - 1
+        self.human_wins = 0
+        self.ai_wins = 0
+        self.draws = 0
 
-            if not (0 <= row < BOARD_SIZE
-                    and 0 <= col < BOARD_SIZE):
-                print("Invalid coordinates. Choose 1, 2, or 3.")
-                continue
+        self.buttons = []
 
-            if board[row][col] != EMPTY:
-                print("That cell is already occupied.")
-                continue
+        self.build_interface()
+        self.update_status("Your turn — make a move!")
 
-            apply_move(board, (row, col), HUMAN)
-            break
+    def build_interface(self):
+        """Create all interface elements."""
 
-        except ValueError:
-            print("Invalid input. Please enter two numbers.")
+        main_frame = tk.Frame(
+            self.root,
+            bg=BG_COLOR,
+            padx=28,
+            pady=24
+        )
+        main_frame.pack()
 
+        # Title
+        tk.Label(
+            main_frame,
+            text="TIC-TAC-TOE",
+            font=("Segoe UI", 25, "bold"),
+            fg=TEXT_COLOR,
+            bg=BG_COLOR
+        ).pack()
 
-def announce_result(board):
-    """Display the final result."""
-    winner = check_winner(board)
+        tk.Label(
+            main_frame,
+            text="ARTIFICIAL INTELLIGENCE  /  MINIMAX",
+            font=("Segoe UI", 9, "bold"),
+            fg=MUTED_COLOR,
+            bg=BG_COLOR
+        ).pack(pady=(4, 18))
 
-    print_board(board)
+        # Score panel
+        score_frame = tk.Frame(
+            main_frame,
+            bg=PANEL_COLOR,
+            padx=12,
+            pady=12
+        )
+        score_frame.pack(fill="x", pady=(0, 16))
 
-    if winner == HUMAN:
-        print("Congratulations! You won!")
-    elif winner == AI:
-        print("AI wins! Better luck next time.")
-    else:
-        print("It's a draw!")
+        self.human_score_label = tk.Label(
+            score_frame,
+            text="YOU (X): 0",
+            font=("Segoe UI", 10, "bold"),
+            fg=X_COLOR,
+            bg=PANEL_COLOR
+        )
+        self.human_score_label.pack(side="left", expand=True)
 
+        self.draw_score_label = tk.Label(
+            score_frame,
+            text="DRAWS: 0",
+            font=("Segoe UI", 10, "bold"),
+            fg=TEXT_COLOR,
+            bg=PANEL_COLOR
+        )
+        self.draw_score_label.pack(side="left", expand=True)
 
-def main():
-    """Main game loop: Human vs AI."""
-    print("=" * 42)
-    print("       TIC-TAC-TOE: HUMAN VS AI")
-    print("          AI algorithm: Minimax")
-    print("=" * 42)
+        self.ai_score_label = tk.Label(
+            score_frame,
+            text="AI (O): 0",
+            font=("Segoe UI", 10, "bold"),
+            fg=O_COLOR,
+            bg=PANEL_COLOR
+        )
+        self.ai_score_label.pack(side="left", expand=True)
 
-    print("\nYou play as X.")
-    print("AI plays as O.")
-    print("Enter the row and column to make a move.")
-    print("Example: 2 3 means row 2, column 3.")
+        # Game board
+        board_frame = tk.Frame(main_frame, bg=BG_COLOR)
+        board_frame.pack()
 
-    board = create_board()
+        for row in range(BOARD_SIZE):
+            button_row = []
 
-    # Human always makes the first move
-    while not is_terminal(board):
-        print_board(board)
-        human_move(board)
+            for col in range(BOARD_SIZE):
+                button = tk.Button(
+                    board_frame,
+                    text="",
+                    font=("Segoe UI", 32, "bold"),
+                    fg=TEXT_COLOR,
+                    bg=CELL_COLOR,
+                    activebackground=CELL_HOVER,
+                    activeforeground=TEXT_COLOR,
+                    disabledforeground=TEXT_COLOR,
+                    relief="flat",
+                    bd=0,
+                    width=4,
+                    height=2,
+                    cursor="hand2",
+                    command=lambda r=row, c=col: self.on_cell_click(r, c)
+                )
 
-        if is_terminal(board):
-            break
+                button.grid(
+                    row=row,
+                    column=col,
+                    padx=5,
+                    pady=5,
+                    sticky="nsew"
+                )
 
-        print("\nAI is analyzing possible moves...")
+                button_row.append(button)
 
-        move, score = find_best_move(board)
+            self.buttons.append(button_row)
+
+        # Status message
+        self.status_label = tk.Label(
+            main_frame,
+            text="",
+            font=("Segoe UI", 11, "bold"),
+            fg=TEXT_COLOR,
+            bg=BG_COLOR,
+            wraplength=340,
+            height=2
+        )
+        self.status_label.pack(pady=(14, 8))
+
+        # Minimax information
+        self.ai_info_label = tk.Label(
+            main_frame,
+            text="AI algorithm: Minimax | Full search",
+            font=("Segoe UI", 9),
+            fg=MUTED_COLOR,
+            bg=BG_COLOR
+        )
+        self.ai_info_label.pack(pady=(0, 16))
+
+        # New game button
+        self.new_game_button = tk.Button(
+            main_frame,
+            text="NEW GAME",
+            font=("Segoe UI", 11, "bold"),
+            fg="#FFFFFF",
+            bg=ACCENT_COLOR,
+            activebackground="#4F46E5",
+            activeforeground="#FFFFFF",
+            relief="flat",
+            bd=0,
+            cursor="hand2",
+            command=self.reset_game,
+            padx=20,
+            pady=11
+        )
+        self.new_game_button.pack(fill="x")
+
+        tk.Label(
+            main_frame,
+            text="You play as X  •  AI plays as O",
+            font=("Segoe UI", 9),
+            fg=MUTED_COLOR,
+            bg=BG_COLOR
+        ).pack(pady=(14, 0))
+
+    def update_status(self, message, color=TEXT_COLOR):
+        """Update the status message."""
+        self.status_label.config(text=message, fg=color)
+
+    def update_scoreboard(self):
+        """Refresh the displayed scores."""
+        self.human_score_label.config(
+            text=f"YOU (X): {self.human_wins}"
+        )
+        self.ai_score_label.config(
+            text=f"AI (O): {self.ai_wins}"
+        )
+        self.draw_score_label.config(
+            text=f"DRAWS: {self.draws}"
+        )
+
+    def on_cell_click(self, row, col):
+        """Handle a human player's click."""
+
+        if self.game_over or self.board[row][col] != EMPTY:
+            return
+
+        # Human makes a move
+        apply_move(self.board, (row, col), HUMAN)
+        self.update_cell(row, col, HUMAN)
+
+        if self.finish_if_terminal():
+            return
+
+        # Temporarily prevent further clicks while AI calculates.
+        self.set_board_enabled(False)
+        self.update_status("AI is analyzing possible moves...", O_COLOR)
+        self.root.update_idletasks()
+
+        # AI chooses its optimal move.
+        move, score = find_best_move(self.board)
 
         if move is not None:
-            apply_move(board, move, AI)
-            print(
-                f"AI chose row {move[0] + 1}, "
-                f"column {move[1] + 1}."
-            )
-            print(f"Minimax score: {score}")
+            apply_move(self.board, move, AI)
+            self.update_cell(move[0], move[1], AI)
 
-    announce_result(board)
+        self.ai_info_label.config(
+            text=f"Minimax algorithm | Evaluation score: {score}"
+        )
+
+        if self.finish_if_terminal():
+            return
+
+        self.set_board_enabled(True)
+        self.update_status("Your turn — make a move!", X_COLOR)
+
+    def update_cell(self, row, col, player):
+        """Update the appearance of one cell."""
+        color = X_COLOR if player == HUMAN else O_COLOR
+
+        self.buttons[row][col].config(
+            text=player,
+            fg=color,
+            disabledforeground=color,
+            bg=PANEL_COLOR,
+            state="disabled"
+        )
+
+    def set_board_enabled(self, enabled):
+        """Enable only empty cells when the game is active."""
+        for row in range(BOARD_SIZE):
+            for col in range(BOARD_SIZE):
+                if self.board[row][col] == EMPTY and not self.game_over:
+                    state = "normal" if enabled else "disabled"
+
+                    self.buttons[row][col].config(
+                        state=state,
+                        bg=CELL_COLOR
+                    )
+
+    def finish_if_terminal(self):
+        """Check the result and update the interface."""
+        winner = check_winner(self.board)
+
+        if winner == HUMAN:
+            self.game_over = True
+            self.human_wins += 1
+            self.update_status("You won! Congratulations!", WIN_COLOR)
+
+        elif winner == AI:
+            self.game_over = True
+            self.ai_wins += 1
+            self.update_status("AI wins! Try again.", O_COLOR)
+
+        elif not get_available_moves(self.board):
+            self.game_over = True
+            self.draws += 1
+            self.update_status("It's a draw!", TEXT_COLOR)
+
+        else:
+            return False
+
+        self.set_board_enabled(False)
+        self.update_scoreboard()
+        return True
+
+    def reset_game(self):
+        """Start a new round without resetting the score."""
+        self.board = create_board()
+        self.game_over = False
+
+        for row in range(BOARD_SIZE):
+            for col in range(BOARD_SIZE):
+                self.buttons[row][col].config(
+                    text="",
+                    state="normal",
+                    bg=CELL_COLOR,
+                    fg=TEXT_COLOR,
+                    disabledforeground=TEXT_COLOR
+                )
+
+        self.ai_info_label.config(
+            text="AI algorithm: Minimax | Full search"
+        )
+
+        self.update_status("Your turn — make a move!", X_COLOR)
+
+
+# ============================================================
+# APPLICATION ENTRY POINT
+# ============================================================
+
+def main():
+    root = tk.Tk()
+    TicTacToeApp(root)
+    root.mainloop()
 
 
 if __name__ == "__main__":
